@@ -15,7 +15,8 @@ const SignupForm: React.FC = () => {
       return;
     }
     try {
-      const response = await fetch('http://localhost:3001/api/send-otp', {
+      const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
+      const response = await fetch(\`\${baseUrl}/api/send-otp\`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
@@ -38,7 +39,8 @@ const SignupForm: React.FC = () => {
       return;
     }
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
+      const response = await fetch(\`\${baseUrl}/api/register\`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, phone, password, otp }),
