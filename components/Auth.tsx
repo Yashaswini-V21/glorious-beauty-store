@@ -55,7 +55,7 @@ const AuthPage = () => {
 
         try {
             const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-            const response = await fetch(\`\${baseUrl}/api/send-otp\`, {
+            const response = await fetch(baseUrl + '/api/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone })
@@ -88,7 +88,7 @@ const AuthPage = () => {
 
         const isLogin = isLoginView;
         const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-        const url = \`\${baseUrl}/api/\${isLogin ? 'login' : 'register'}\`;
+        const url = baseUrl + '/api/' + (isLogin ? 'login' : 'register');
         const payload = isLogin
             ? { email, password }
             : { name, email, phone, password, otp };
@@ -155,7 +155,7 @@ const AuthPage = () => {
         }
         try {
             const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-            const response = await fetch(\`\${baseUrl}/api/forgot-password/send-otp\`, {
+            const response = await fetch(baseUrl + '/api/forgot-password/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone: fpPhone })
@@ -184,7 +184,7 @@ const AuthPage = () => {
         setFpLoading(true);
         try {
             const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-            const response = await fetch(\`\${baseUrl}/api/forgot-password/reset\`, {
+            const response = await fetch(baseUrl + '/api/forgot-password/reset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone: fpPhone, otp: fpOtp, newPassword: fpNewPassword })
