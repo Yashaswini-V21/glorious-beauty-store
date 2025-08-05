@@ -1,29 +1,70 @@
 # Glorious Beauty Store
 
-A simple cosmetics website built with React and TypeScript demonstrating frontend user authentication with OTP verification without backend. Created by a BCA student and AI/ML aspirant, this project showcases practical frontend skills and authentication flows using localStorage for data persistence.
+A modern, responsive cosmetics e-commerce website built with React, TypeScript, and Vite. This project features user authentication with OTP verification and a clean, intuitive UI for browsing and purchasing beauty products.
 
 ## Features
 
-- User signup and login with OTP verification
-- Password reset functionality
-- LocalStorage-based user data management
-- Responsive product catalog
-- Clean and modern UI design
+- 🛍️ Browse a wide range of beauty products
+- 🔐 User authentication with OTP verification
+- 🛒 Shopping cart functionality
+- 📱 Fully responsive design for all devices
+- ⚡ Built with Vite for fast development and optimized builds
+- 🔄 LocalStorage-based user data management
+- 🔄 Password reset functionality
 
-## Technologies Used
+## Tech Stack
 
-- React with TypeScript
-- Tailwind CSS for styling
-- LocalStorage for data persistence
-- Vite for development and build tooling
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, CSS Modules
+- **State Management**: React Context API
+- **Routing**: React Router
+- **Build Tool**: Vite
+- **Deployment**: Vercel
 
 ## Getting Started
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start development server: `npm run dev`
-4. Build for production: `npm run build`
+### Prerequisites
+
+- Node.js (v14 or later)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/glorious-beauty-store.git
+   cd glorious-beauty-store
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Deployment
 
-This project can be deployed as a static site on platforms like Vercel, Netlify, or GitHub Pages without any backend dependencies.
+This project is configured for deployment on Vercel. To deploy:
+
+1. Push your code to a GitHub repository
+2. Sign in to [Vercel](https://vercel.com/)
+3. Click "Add New" > "Project"
+4. Import your GitHub repository
+5. Vercel will automatically detect the Vite configuration and set up the project
+6. Click "Deploy"
+
+Your site will be live at `https://your-project-name.vercel.app`
+
+## OTP Verification
+
+For demo purposes, the OTP is displayed on the screen. In a production environment, you would integrate with an SMS service like Twilio or Firebase Auth.

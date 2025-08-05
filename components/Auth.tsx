@@ -72,10 +72,23 @@ const AuthPage = () => {
             return;
         }
 
-        const newOtp = generateOTP();
-        setGeneratedOtp(newOtp);
-        setOtpSent(true);
-        setOtpMessage(`OTP generated: ${newOtp} (for demo only)`);
+        try {
+            const newOtp = generateOTP();
+            setGeneratedOtp(newOtp);
+            setOtpSent(true);
+            setOtpMessage(`OTP generated: ${newOtp} (for demo only)`);
+            
+            // Ensure we're returning a proper JSON response for mobile
+            return Promise.resolve({
+                success: true,
+                message: 'OTP sent successfully',
+                otp: newOtp
+            });
+        } catch (error) {
+            console.error('Error generating OTP:', error);
+            setOtpMessage('Failed to generate OTP. Please try again.');
+            return Promise.reject(new Error('Failed to generate OTP'));
+        }
     };
 
     // Handle signup/login
