@@ -1,8 +1,3 @@
-
-// Auth.tsx - Handles all authentication flows (signup, login, password reset) for Glorious Beauty Store
-// Beginner-friendly: clear comments, robust error handling, accessible UI
-// Flows: Signup (with OTP), Login (existing users), Forgot Password (OTP reset)
-
 import React, { useState, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../App';
@@ -12,10 +7,13 @@ const DecorativeShape = ({ className }: { className: string }) => (
     <div className={`absolute rounded-full -z-10 blur-3xl opacity-20 ${className}`}></div>
 );
 
-// Copied from App.tsx for use here, adding to the background
 const Sparkle = ({ className, style }: { className: string; style?: React.CSSProperties }) => (
     <div className={`absolute bg-pink-300 rounded-full animate-twinkle -z-10 ${className}`} style={style} />
 );
+
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 const AuthPage = () => {
     const [isLoginView, setIsLoginView] = useState(true);
@@ -35,15 +33,36 @@ const AuthPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [serverError, setServerError] = useState('');
-    
+
     // State for OTP
     const [phone, setPhone] = useState('');
-    // Country code removed; only 10-digit phone numbers allowed
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState('');
     const [otpMessage, setOtpMessage] = useState('');
+    const [generatedOtp, setGeneratedOtp] = useState('');
 
-    const handleSendOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Local storage keys
+    const USERS_KEY = 'glorious-beauty-users';
+    const LOGGED_IN_USER_KEY = 'glorious-beauty-logged-in-user';
+
+    // Helper to get users from localStorage
+    const getUsers = () => {
+        const usersJson = localStorage.getItem(USERS_KEY);
+        return usersJson ? JSON.parse(usersJson) : [];
+    };
+
+    // Helper to save users to localStorage
+    const saveUsers = (users: any[]) => {
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    };
+
+    // Helper to save logged in user
+    const saveLoggedInUser = (user: any) => {
+        localStorage.setItem(LOGGED_IN_USER_KEY, JSON.stringify(user));
+    };
+
+    // Send OTP (frontend only)
+    const handleSendOtp = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         setOtpMessage('');
         setServerError('');
@@ -53,78 +72,55 @@ const AuthPage = () => {
             return;
         }
 
-        try {
-            const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-            const response = await fetch(baseUrl + '/api/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            });
-            let data;
-            try {
-                data = await response.json();
-            } catch (jsonErr) {
-                // Response is not valid JSON (e.g., server error, HTML page)
-                setOtpMessage('Server error: Could not parse response. Please try again later.');
-                return;
-            }
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to send OTP.');
-            }
-
-            setOtpSent(true);
-            setOtpMessage(`${data.message}${data.otp ? ` OTP: ${data.otp}` : ''}`);
-
-        } catch (err: any) {
-            setOtpMessage(err.message || 'An unexpected error occurred. Please try again.');
-        }
+        const newOtp = generateOTP();
+        setGeneratedOtp(newOtp);
+        setOtpSent(true);
+        setOtpMessage(`OTP generated: ${newOtp} (for demo only)`);
     };
-    
-    const handleAuth = async (e: React.FormEvent) => {
+
+    // Handle signup/login
+    const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
         setServerError('');
         setOtpMessage('');
 
-        const isLogin = isLoginView;
-        const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-        const url = baseUrl + '/api/' + (isLogin ? 'login' : 'register');
-        const payload = isLogin
-            ? { email, password }
-            : { name, email, phone, password, otp };
-        
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            let data;
-            if (response.headers.get('content-type')?.includes('application/json')) {
-                data = await response.json();
-            } else {
-                data = {};
+        if (isLoginView) {
+            // Login flow
+            const users = getUsers();
+            const user = users.find((u: { email: string; password: string }) => u.email === email && u.password === password);
+            if (!user) {
+                setServerError('Invalid email or password.');
+                return;
             }
-
-            if (!response.ok) {
-                throw new Error(data.message || 'An authentication error occurred.');
+            saveLoggedInUser(user);
+            context?.login('dummy-token');
+            navigate('/home');
+        } else {
+            // Signup flow
+            if (!name || !email || !phone || !password || !otp) {
+                setServerError('Please fill all fields including OTP.');
+                return;
             }
-
-            if (data.token) {
-                context?.login(data.token);
-                navigate('/home');
-            } else {
-                setServerError('Failed to get authentication token.');
+            if (otp !== generatedOtp) {
+                setServerError('Invalid OTP.');
+                return;
             }
-        } catch (err: any) {
-            setServerError(err.message);
+            const users = getUsers();
+            if (users.find((u: { email: string }) => u.email === email)) {
+                setServerError('Email already exists.');
+                return;
+            }
+            const newUser = { name, email, phone, password };
+            users.push(newUser);
+            saveUsers(users);
+            saveLoggedInUser(newUser);
+            context?.login('dummy-token');
+            navigate('/home');
         }
     };
-    
+
     const toggleView = useCallback(() => {
         setIsLoginView(prev => !prev);
-        // Reset all fields
         setName('');
         setEmail('');
         setPassword('');
@@ -133,17 +129,18 @@ const AuthPage = () => {
         setOtp('');
         setOtpMessage('');
         setServerError('');
+        setGeneratedOtp('');
     }, []);
 
     const handlePasswordFocus = () => {
         setIsWinking(true);
         setTimeout(() => {
             setIsWinking(false);
-        }, 1500); // Wink lasts for 1.5 seconds
+        }, 1500);
     };
 
-    // --- Forgot Password Handlers ---
-    const handleForgotPasswordSendOtp = async (e: React.FormEvent) => {
+    // Forgot Password Handlers (frontend only)
+    const handleForgotPasswordSendOtp = (e: React.FormEvent) => {
         e.preventDefault();
         setFpMessage('');
         setFpOtpSent(false);
@@ -153,66 +150,42 @@ const AuthPage = () => {
             setFpLoading(false);
             return;
         }
-        try {
-            const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-            const response = await fetch(baseUrl + '/api/forgot-password/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: fpPhone })
-            });
-            let data;
-            if (response.headers.get('content-type')?.includes('application/json')) {
-                data = await response.json();
-            } else {
-                data = {};
-            }
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to send OTP.');
-            }
-            setFpOtpSent(true);
-            setFpMessage(`${data.message}${data.otp ? ` OTP: ${data.otp}` : ''}`);
-        } catch (err: any) {
-            setFpMessage(err.message);
-        } finally {
-            setFpLoading(false);
-        }
+        const newOtp = generateOTP();
+        setGeneratedOtp(newOtp);
+        setFpOtpSent(true);
+        setFpMessage(`OTP generated: ${newOtp} (for demo only)`);
+        setFpLoading(false);
     };
 
-    const handleForgotPasswordReset = async (e: React.FormEvent) => {
+    const handleForgotPasswordReset = (e: React.FormEvent) => {
         e.preventDefault();
         setFpMessage('');
         setFpLoading(true);
-        try {
-            const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://glorious-beauty-store.vercel.app';
-            const response = await fetch(baseUrl + '/api/forgot-password/reset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: fpPhone, otp: fpOtp, newPassword: fpNewPassword })
-            });
-            let data;
-            if (response.headers.get('content-type')?.includes('application/json')) {
-                data = await response.json();
-            } else {
-                data = {};
-            }
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to reset password.');
-            }
-            setFpMessage('Password reset successful! You can now log in.');
-            setTimeout(() => {
-                setIsForgotPassword(false);
-                setIsLoginView(true);
-                setFpPhone('');
-                setFpOtp('');
-                setFpNewPassword('');
-                setFpOtpSent(false);
-                setFpMessage('');
-            }, 2000);
-        } catch (err: any) {
-            setFpMessage(err.message);
-        } finally {
+        if (fpOtp !== generatedOtp) {
+            setFpMessage('Invalid OTP.');
             setFpLoading(false);
+            return;
         }
+        const users = getUsers();
+        const userIndex = users.findIndex((u: { phone: string }) => u.phone === fpPhone);
+        if (userIndex === -1) {
+            setFpMessage('Phone number not found.');
+            setFpLoading(false);
+            return;
+        }
+        users[userIndex].password = fpNewPassword;
+        saveUsers(users);
+        setFpMessage('Password reset successful! You can now log in.');
+        setTimeout(() => {
+            setIsForgotPassword(false);
+            setIsLoginView(true);
+            setFpPhone('');
+            setFpOtp('');
+            setFpNewPassword('');
+            setFpOtpSent(false);
+            setFpMessage('');
+        }, 2000);
+        setFpLoading(false);
     };
 
     return (
